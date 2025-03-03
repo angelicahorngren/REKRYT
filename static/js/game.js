@@ -43,6 +43,10 @@ class Game {
         console.log('Game initialized successfully');
         this.addObstacle();
         requestAnimationFrame(this.animate.bind(this));
+
+        // Load high score
+        this.highScore = parseInt(localStorage.getItem('highScore')) || 0;
+        document.getElementById('highScore').textContent = Math.floor(this.highScore);
     }
 
     handleKeyDown(event) {
@@ -135,6 +139,19 @@ class Game {
         this.isGameOver = true;
         document.getElementById('gameOverScreen').classList.remove('d-none');
         document.getElementById('finalScore').textContent = Math.floor(this.score);
+
+        // Update high score if needed
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem('highScore', this.highScore);
+            document.getElementById('highScore').textContent = Math.floor(this.highScore);
+        }
+
+        // Dispatch game over event
+        const gameOverEvent = new CustomEvent('gameOver', { 
+            detail: { score: this.score } 
+        });
+        window.dispatchEvent(gameOverEvent);
     }
 
     restart() {
