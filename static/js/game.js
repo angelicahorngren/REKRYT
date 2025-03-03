@@ -1,57 +1,67 @@
+// Add logging for debugging
+console.log('Game script loaded');
+
 class Game {
     constructor() {
+        console.log('Initializing game');
         this.canvas = document.getElementById('gameCanvas');
+        if (!this.canvas) {
+            console.error('Canvas element not found!');
+            return;
+        }
         this.ctx = this.canvas.getContext('2d');
+        console.log('Canvas context created');
+
         this.width = this.canvas.width;
         this.height = this.canvas.height;
-        
-        // Game properties
+
+        // Initialize player with explicit dimensions
         this.player = {
             x: 100,
             y: this.height - 50,
-            size: 30,
+            width: 30,
+            height: 30,
             velocityY: 0,
             gravity: 0.8,
             jumpForce: -15,
             isJumping: false
         };
-        
+
         this.gameSpeed = 5;
         this.score = 0;
         this.obstacles = [];
         this.isGameOver = false;
         this.groundLevel = this.height - 50;
-        
-        // Bind event listeners
+
+        // Add event listeners
         document.addEventListener('keydown', this.handleKeyDown.bind(this));
         this.canvas.addEventListener('click', this.handleClick.bind(this));
         document.getElementById('restartButton').addEventListener('click', this.restart.bind(this));
-        
-        // Start the game loop
+
         this.lastTime = 0;
-        this.animate(0);
-        
-        // Initialize first obstacle
+        console.log('Game initialized successfully');
         this.addObstacle();
+        requestAnimationFrame(this.animate.bind(this));
     }
-    
+
     handleKeyDown(event) {
         if (event.code === 'Space' && !this.player.isJumping && !this.isGameOver) {
             this.jump();
         }
     }
-    
+
     handleClick() {
         if (!this.player.isJumping && !this.isGameOver) {
             this.jump();
         }
     }
-    
+
     jump() {
+        console.log('Jump triggered');
         this.player.velocityY = this.player.jumpForce;
         this.player.isJumping = true;
     }
-    
+
     addObstacle() {
         const types = ['spike', 'block'];
         const type = types[Math.floor(Math.random() * types.length)];
@@ -63,75 +73,66 @@ class Game {
             type: type
         };
         this.obstacles.push(obstacle);
+        console.log('Added obstacle:', obstacle);
     }
-    
+
     update(deltaTime) {
         if (this.isGameOver) return;
-        
-        // Update player
+
+        // Update player position
         this.player.velocityY += this.player.gravity;
         this.player.y += this.player.velocityY;
-        
+
         // Ground collision
-        if (this.player.y > this.groundLevel - this.player.size) {
-            this.player.y = this.groundLevel - this.player.size;
+        if (this.player.y > this.groundLevel - this.player.height) {
+            this.player.y = this.groundLevel - this.player.height;
             this.player.velocityY = 0;
             this.player.isJumping = false;
         }
-        
+
         // Update obstacles
         this.obstacles.forEach(obstacle => {
             obstacle.x -= this.gameSpeed;
         });
-        
+
         // Remove off-screen obstacles
         this.obstacles = this.obstacles.filter(obstacle => obstacle.x > -obstacle.width);
-        
+
         // Add new obstacles
         if (this.obstacles.length < 3 && 
-            this.obstacles[this.obstacles.length - 1].x < this.width - 300) {
+            (this.obstacles.length === 0 || this.obstacles[this.obstacles.length - 1].x < this.width - 300)) {
             this.addObstacle();
         }
-        
+
         // Update score
         this.score += this.gameSpeed * 0.1;
         document.getElementById('currentScore').textContent = Math.floor(this.score);
-        
-        // Check collisions
+
         this.checkCollisions();
     }
-    
+
     checkCollisions() {
-        const playerHitbox = {
-            x: this.player.x,
-            y: this.player.y,
-            width: this.player.size,
-            height: this.player.size
-        };
-        
         for (const obstacle of this.obstacles) {
-            if (this.intersects(playerHitbox, obstacle)) {
+            const collision = this.player.x < obstacle.x + obstacle.width &&
+                            this.player.x + this.player.width > obstacle.x &&
+                            this.player.y < obstacle.y + obstacle.height &&
+                            this.player.y + this.player.height > obstacle.y;
+
+            if (collision) {
+                console.log('Collision detected');
                 this.gameOver();
                 break;
             }
         }
     }
-    
-    intersects(rect1, rect2) {
-        return rect1.x < rect2.x + rect2.width &&
-               rect1.x + rect1.width > rect2.x &&
-               rect1.y < rect2.y &&
-               rect1.y + rect1.height > rect2.y - rect2.height;
-    }
-    
+
     gameOver() {
         this.isGameOver = true;
         document.getElementById('gameOverScreen').classList.remove('d-none');
         document.getElementById('finalScore').textContent = Math.floor(this.score);
     }
-    
+
     restart() {
-        // Reset game state
         this.player.y = this.height - 50;
         this.player.velocityY = 0;
         this.player.isJumping = false;
@@ -142,24 +143,23 @@ class Game {
         document.getElementById('currentScore').textContent = '0';
         this.addObstacle();
     }
-    
+
     draw() {
-        // Clear canvas
         this.ctx.clearRect(0, 0, this.width, this.height);
-        
+
         // Draw ground
         this.ctx.fillStyle = '#666';
         this.ctx.fillRect(0, this.groundLevel, this.width, 2);
-        
+
         // Draw player
         this.ctx.fillStyle = '#0d6efd';
         this.ctx.fillRect(
             this.player.x,
             this.player.y,
-            this.player.size,
-            this.player.size
+            this.player.width,
+            this.player.height
         );
-        
+
         // Draw obstacles
         this.obstacles.forEach(obstacle => {
             this.ctx.fillStyle = '#dc3545';
@@ -180,19 +180,19 @@ class Game {
             }
         });
     }
-    
+
     animate(currentTime) {
         const deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
-        
+
         this.update(deltaTime);
         this.draw();
-        
+
         requestAnimationFrame(this.animate.bind(this));
     }
 }
 
-// Start the game when the page loads
 window.addEventListener('load', () => {
+    console.log('Window loaded, creating game instance');
     new Game();
 });

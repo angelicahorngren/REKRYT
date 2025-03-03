@@ -10,6 +10,7 @@ app.secret_key = os.environ.get("SESSION_SECRET")
 
 @app.route('/')
 def index():
+    app.logger.debug('Rendering index page')
     return render_template('index.html')
 
 if __name__ == '__main__':
