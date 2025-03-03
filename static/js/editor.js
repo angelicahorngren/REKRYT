@@ -10,13 +10,31 @@ document.getElementById('applyChanges').addEventListener('click', () => {
     try {
         // Get the edited code
         const newCode = editor.getValue();
-        
+
         // Create a new Function from the code to validate syntax
         new Function(newCode);
-        
-        // If validation passes, apply the changes
-        localStorage.setItem('gameCode', newCode);
-        location.reload(); // Reload to apply changes
+
+        // If validation passes, send to server
+        fetch('/save_code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code: newCode })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.href = '/'; // Redirect to game page
+            } else {
+                throw new Error(data.error || 'Failed to save changes');
+            }
+        })
+        .catch(error => {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = `Error: ${error.message}`;
+            errorMessage.classList.remove('d-none');
+        });
     } catch (error) {
         // Show error message if code is invalid
         const errorMessage = document.getElementById('errorMessage');
