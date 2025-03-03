@@ -9,12 +9,7 @@ document.getElementById('applyChanges').addEventListener('click', () => {
         const newCode = editor.getValue();
 
         // Validate the object syntax
-        const mockContext = { height: 400 };
-        const playerProps = new Function(`
-            let game = { height: 400 };  // Mock the game context
-            ${newCode}
-            return game.player;
-        `)();
+        const playerProps = new Function(`return ${newCode}`)();
 
         // Check required properties
         const requiredProps = ['x', 'y', 'width', 'height', 'velocityY', 'gravity', 'jumpForce', 'isJumping'];
