@@ -27,7 +27,8 @@ class Game {
             isJumping: false
         };
 
-        this.gameSpeed = 5;
+        // Reduced game speed from 5 to 3
+        this.gameSpeed = 3;
         this.score = 0;
         this.obstacles = [];
         this.isGameOver = false;
@@ -113,10 +114,14 @@ class Game {
 
     checkCollisions() {
         for (const obstacle of this.obstacles) {
+            // Adjust collision check based on obstacle type
+            let obstacleY = obstacle.type === 'spike' ? 
+                           obstacle.y - obstacle.height : // For spikes, check from the tip
+                           obstacle.y - obstacle.height;  // For blocks, check from the top
+
             const collision = this.player.x < obstacle.x + obstacle.width &&
                             this.player.x + this.player.width > obstacle.x &&
-                            this.player.y < obstacle.y + obstacle.height &&
-                            this.player.y + this.player.height > obstacle.y;
+                            this.player.y + this.player.height > obstacleY;
 
             if (collision) {
                 console.log('Collision detected');
