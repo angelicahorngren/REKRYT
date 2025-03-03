@@ -9,7 +9,11 @@ document.getElementById('applyChanges').addEventListener('click', () => {
         const newCode = editor.getValue();
 
         // Validate the object syntax
-        const playerProps = new Function(`return ${newCode}`)();
+        const playerProps = new Function(`
+            const this = { height: 400 };  // Mock the game context
+            ${newCode}
+            return this.player;
+        `)();
 
         // Check required properties
         const requiredProps = ['x', 'y', 'width', 'height', 'velocityY', 'gravity', 'jumpForce', 'isJumping'];
