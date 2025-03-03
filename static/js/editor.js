@@ -3,18 +3,23 @@ const editor = ace.edit("editor");
 editor.setTheme("ace/theme/monokai");
 editor.session.setMode("ace/mode/javascript");
 
-// Keep track of high score
-let highScore = 0;
-
 document.getElementById('applyChanges').addEventListener('click', () => {
     try {
         // Get the edited code
         const newCode = editor.getValue();
 
-        // Create a new Function from the code to validate syntax
-        new Function(newCode);
+        // Validate the object syntax
+        const playerProps = new Function(`return ${newCode}`)();
 
-        // If validation passes, send to server
+        // Check required properties
+        const requiredProps = ['x', 'y', 'width', 'height', 'velocityY', 'gravity', 'jumpForce', 'isJumping'];
+        const missingProps = requiredProps.filter(prop => !(prop in playerProps));
+
+        if (missingProps.length > 0) {
+            throw new Error(`Missing required properties: ${missingProps.join(', ')}`);
+        }
+
+        // Send to server
         fetch('/save_code', {
             method: 'POST',
             headers: {
@@ -42,6 +47,9 @@ document.getElementById('applyChanges').addEventListener('click', () => {
         errorMessage.classList.remove('d-none');
     }
 });
+
+// Keep track of high score
+let highScore = 0;
 
 // Update high score when game ends
 window.addEventListener('gameOver', (e) => {

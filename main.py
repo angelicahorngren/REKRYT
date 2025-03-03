@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import os
 import logging
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -19,16 +20,41 @@ def editor():
     # Read the game.js file content
     with open('static/js/game.js', 'r') as file:
         code = file.read()
-    return render_template('editor.html', code=code)
+
+    # Extract only the player properties section
+    player_props_pattern = r'this\.player = \{[^}]+\};'
+    match = re.search(player_props_pattern, code)
+    if match:
+        player_props = match.group(0)
+        # Format the code nicely
+        player_props = player_props.replace('this.player = ', '')
+        player_props = player_props.strip(';')
+    else:
+        player_props = '{}'
+
+    return render_template('editor.html', code=player_props)
 
 @app.route('/save_code', methods=['POST'])
 def save_code():
     app.logger.debug('Saving code changes')
     try:
-        new_code = request.json.get('code')
-        if new_code:
+        new_player_props = request.json.get('code')
+        if new_player_props:
+            # Read the current game.js
+            with open('static/js/game.js', 'r') as file:
+                full_code = file.read()
+
+            # Replace the player properties section
+            updated_code = re.sub(
+                r'this\.player = \{[^}]+\};',
+                f'this.player = {new_player_props};',
+                full_code
+            )
+
+            # Save the updated code
             with open('static/js/game.js', 'w') as file:
-                file.write(new_code)
+                file.write(updated_code)
+
             return jsonify({'success': True})
         return jsonify({'success': False, 'error': 'No code provided'}), 400
     except Exception as e:
