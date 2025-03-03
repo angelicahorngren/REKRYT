@@ -29,6 +29,8 @@ def editor():
         # Format the code nicely
         player_props = player_props.replace('this.player = ', '')
         player_props = player_props.strip(';')
+        # Add comment for clarity
+        player_props = '// Player Properties\n' + player_props
     else:
         player_props = '{}'
 
