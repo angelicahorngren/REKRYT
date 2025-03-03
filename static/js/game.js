@@ -22,7 +22,7 @@ class Game {
             width: 30,
             height: 30,
             velocityY: 0,
-            gravity: 0.8,
+            gravity: 0.5,
             jumpForce: -15,
             isJumping: false
         };
