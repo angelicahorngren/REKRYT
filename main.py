@@ -26,12 +26,11 @@ def editor():
     match = re.search(player_props_pattern, code)
     if match:
         player_props = match.group(0)
-        # Keep the original object literal syntax
+        # Format the code nicely
+        player_props = player_props.replace('this.player = ', '')
         player_props = player_props.strip(';')
-        # Add comment for clarity
-        player_props = '// Player Properties\n' + player_props
     else:
-        player_props = 'this.player = {}'
+        player_props = '{}'
 
     return render_template('editor.html', code=player_props)
 
